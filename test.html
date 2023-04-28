@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://unpkg.com/fft.js@4.0.4/lib/fft.js"></script>
+</head>
+
+<body>
+    <script>
+        const audioContext = new AudioContext();
+
+// Create a MediaStreamSource from the microphone
+navigator.mediaDevices.getUserMedia({audio: true})
+  .then(stream => {
+    const source = audioContext.createMediaStreamSource(stream);
+
+    // Create a ScriptProcessorNode to process the audio data
+    const scriptNode = audioContext.createScriptProcessor(4096, 1, 1);
+
+    // Connect the source to the scriptNode
+    source.connect(scriptNode);
+
+    // Connect the scriptNode to the destination (the speakers)
+    scriptNode.connect(audioContext.destination);
+
+    // Process the audio data
+    scriptNode.onaudioprocess = function(event) {
+      // Get the input buffer
+      const inputBuffer = event.inputBuffer;
+
+      // Get the data from the first channel
+      const inputData = inputBuffer.getChannelData(0);
+
+      // Calculate the frequency using a Fast Fourier Transform (FFT)
+      const fft = new FFT(inputData.length, audioContext.sampleRate);
+      fft.forward(inputData);
+
+      // Get the frequency data
+      const frequencyData = fft.spectrum;
+
+      // Do something with the frequency data...
+    };
+  })
+  .catch(error => {
+    console.error(error);
+  });
+    </script>
+</body>
+</html>
